@@ -1,5 +1,6 @@
 
-get_plots <- function(fitted_model, survey_data, param_df, pred_months) {
+get_plots <- function(fitted_model, survey_data, param_df, pred_months=F, pred_sites=F) {
+ 
   cols<-viridis(2)
   
   # Extract predictions and observed statistics
@@ -8,18 +9,19 @@ get_plots <- function(fitted_model, survey_data, param_df, pred_months) {
     group_by(site) %>%
     summarise(observed_mean = sum(positive) / sum(sample_size),
               observed_lower = binom.confint(sum(positive), sum(sample_size), methods = "wilson")$lower,
-              observed_upper = binom.confint(sum(positive), sum(sample_size), methods = "wilson")$upper)
+              observed_upper = binom.confint(sum(positive), sum(sample_size), methods = "wilson")$upper)%>%
+    mutate(Status = ifelse(site %in% pred_sites, "Predicted", "Fitted"))
   prev_by_site <- cbind(prev_by_site, rowQuantiles(site_preds, p = c(0.025, 0.5, 0.975)))
-  names(prev_by_site) <- c("site", "observed_mean", "observed_lower", "observed_upper", "model_lower", "model_median", "model_upper")
+  names(prev_by_site) <- c("site", "observed_mean", "observed_lower", "observed_upper","Status","model_lower", "model_median", "model_upper")
   
   # Spatial plot setup
-  spatial_plot <- ggplot(prev_by_site, aes(x = observed_mean, y = model_median),color="blue") +
+  spatial_plot <- ggplot(prev_by_site, aes(x = observed_mean, y = model_median,color=Status)) +
     geom_point() +
-    geom_errorbar(aes(ymin = model_lower, ymax = model_upper), width = 0.01,color="blue") +
-    geom_errorbarh(aes(xmin = observed_lower, xmax = observed_upper), height = 0.01,color="blue") +
+    geom_errorbar(aes(ymin = model_lower, ymax = model_upper), width = 0.01) +
+    geom_errorbarh(aes(xmin = observed_lower, xmax = observed_upper), height = 0.01) +
     labs(x = "Observed Prevalence (Mean)", y = "Modeled Prevalence (Median)")+
-    theme_minimal()
-  
+    theme_minimal()+geom_abline()
+  spatial_plot
   # Temporal analysis setup
   temp_preds <- get_weight_month_pred(fitted_model$fit_array, survey_data)
   prev_by_month <- survey_data %>%
@@ -46,7 +48,7 @@ get_plots <- function(fitted_model, survey_data, param_df, pred_months) {
     labs(x = "Month", y = "Prevalence", title = "Observed vs Modelled Prevalence by Month") +
     theme_minimal() +
     guides(fill = guide_legend(title = "Legend"), color = guide_legend(title = "Legend"))
-  
+  temporal_plot
   # Posterior distribution analysis
   sample_matrix <- as.matrix(fitted_model$draws)
   post_samples <- as.data.frame(sample_matrix[, !grepl("^theta", colnames(sample_matrix))])
@@ -56,7 +58,8 @@ get_plots <- function(fitted_model, survey_data, param_df, pred_months) {
   posterior_long$color <- color_mapping[as.character(posterior_long$parameter)]
   simulated_long <- pivot_longer(param_df, cols = everything(), names_to = "parameter", values_to = "value")
   simulated_long$color <- color_mapping[as.character(simulated_long$parameter)]
-  
+  print(color_mapping)
+  print(simulated_long)
   posterior_plot <- ggplot(posterior_long, aes(x = value, y = parameter, fill = color)) +
     geom_density_ridges(rel_min_height = 0.01, alpha = 0.25) +
     scale_fill_identity() +

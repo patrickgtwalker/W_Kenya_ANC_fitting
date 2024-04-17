@@ -17,12 +17,13 @@ probability_to_odds <- function(probability) {
 get_weight_month_pred <- function(fit_array, pop_survey_data) {
   # Determine the number of months and predictions
   n_month <- dim(fit_array)[3]
+  n_site <- dim(fit_array)[2]
   n_preds <- dim(fit_array)[1]
   # Initialize an array for storing weighted averages
   weighted_averages <- array(dim = c(n_month, n_preds))
   
   # Create a grid of all possible site-month combinations
-  full_grid <- expand.grid(site = 1:n_sites, month = 1:n_month)
+  full_grid <- expand.grid(site = 1:n_site, month = 1:n_month)
   
   # Merge this grid with population survey data to include sample sizes
   # Replace missing values with 0, indicating no samples
@@ -32,7 +33,7 @@ get_weight_month_pred <- function(fit_array, pop_survey_data) {
     arrange(site, month)
   
   # Convert the merged data into a matrix format for easier processing
-  sample_sizes_matrix <- matrix(sample_sizes_df$sample_size, nrow = n_sites, byrow = TRUE)
+  sample_sizes_matrix <- matrix(sample_sizes_df$sample_size, nrow = n_site, byrow = TRUE)
   
   # Loop through each prediction and month to calculate weighted averages
   for (pred in 1:n_preds) {
@@ -49,13 +50,14 @@ get_weight_month_pred <- function(fit_array, pop_survey_data) {
 # Function to calculate weighted averages of predictions across sites
 get_weight_site_pred <- function(fit_array, pop_survey_data) {
   # The dimensions for n_month should be corrected to n_site for consistency in variable naming
+  n_month <- dim(fit_array)[3]
   n_site <- dim(fit_array)[2]
   n_preds <- dim(fit_array)[1]
   # Initialize an array for storing weighted averages
   weighted_averages <- array(dim = c(n_site, n_preds))
   
   # Create a grid of all possible site-month combinations
-  full_grid <- expand.grid(site = 1:n_sites, month = 1:n_month)
+  full_grid <- expand.grid(site = 1:n_site, month = 1:n_month)
   
   # Merge this grid with population survey data to include sample sizes
   sample_sizes_df <- full_grid %>%
@@ -64,7 +66,7 @@ get_weight_site_pred <- function(fit_array, pop_survey_data) {
     arrange(site, month)
   
   # Convert the dataframe to a matrix of sample sizes
-  sample_sizes_matrix <- matrix(sample_sizes_df$sample_size, nrow = n_sites, byrow = TRUE)
+  sample_sizes_matrix <- matrix(sample_sizes_df$sample_size, nrow = n_site, byrow = TRUE)
   
   # Loop through each prediction and site to calculate weighted averages
   for (pred in 1:n_preds) {
@@ -77,3 +79,6 @@ get_weight_site_pred <- function(fit_array, pop_survey_data) {
   }
   return(weighted_averages)
 }
+
+
+
