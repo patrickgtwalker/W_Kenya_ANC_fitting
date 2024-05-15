@@ -14,6 +14,8 @@ probability_to_odds <- function(probability) {
   probability / (1 - probability)
 }
 
+
+
 # Function to calculate weighted averages of predictions across months
 get_weight_month_pred <- function(fit_array, pop_survey_data) {
   # Determine the number of months and predictions

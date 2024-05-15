@@ -1,7 +1,7 @@
 generate_data_m1<-function(n_month=50,
                                    n_sites=20,
                                base_par=0,
-                               month_sd=0.8,
+                               month_sd=0.6,
                                site_sd =0.8,
                                    ANC_log_odds_ratio=-0.5,
                                    survey_samples_site_month_min=20,
@@ -53,7 +53,7 @@ generate_data_m1<-function(n_month=50,
 
 generate_data_m1_runif_site<-function(n_month=50,
                                        n_sites=20,
-                                       month_sd =2,
+                                       month_sd =1,
                                        ANC_log_odds_ratio=-0.5,
                                        survey_samples_site_month_min=20,
                                        survey_samples_site_month_max=100,
@@ -92,7 +92,12 @@ generate_data_m1_runif_site<-function(n_month=50,
   survey_data$ANC=0
   
   data_to_model<-rbind(ANC_data, survey_data)%>%
-    filter(!(site %in% pred_sites&ANC==0))
+    mutate(
+      sample_size = ifelse(ANC == 0 & site %in% pred_sites, 0, sample_size),
+      positive = ifelse(ANC == 0 & site %in% pred_sites, 0, positive)
+    )
+  
+  
   
   return(list(
     param_df=data.frame(preg_par=ANC_log_odds_ratio,
@@ -105,7 +110,7 @@ generate_data_m1_runif_site<-function(n_month=50,
 
 generate_data_m1_runif_month<-function(n_month=50,
                                n_sites=20,
-                               site_sd =2,
+                               site_sd =1,
                                ANC_log_odds_ratio=-0.5,
                                survey_samples_site_month_min=20,
                                survey_samples_site_month_max=100,
@@ -144,7 +149,10 @@ ANC_data$ANC=1
 survey_data$ANC=0
 
 data_to_model<-rbind(ANC_data, survey_data)%>%
-  filter(!(month %in% pred_months&ANC==0))
+  mutate(
+    sample_size = ifelse(ANC == 0 & month %in% pred_months, 0, sample_size),
+    positive = ifelse(ANC == 0 & month %in% pred_months, 0, positive)
+  )
 
 return(list(
   param_df=data.frame(preg_par=ANC_log_odds_ratio,
@@ -159,7 +167,7 @@ return(list(
 generate_data_m5<-function(n_month=50,
                                n_sites=20,
                                base_par=0,
-                               month_sd=2,
+                               month_sd=0.8,
                                site_sd =1,
                                ANC_log_odds_intercept_cat1=0.1,
                                ANC_log_odds_intercept_cat2=-0.2,

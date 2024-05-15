@@ -99,16 +99,17 @@ fit_m5<-function(data,warmup,n_samples,thin){
   distribution(data$positive)=binomial(data$sample_size,p)
   m<-model(base_par,theta_month,tau_month,theta_site,tau_site,log_odd_ratio_gradient_GC1,log_odd_ratio_gradient_GC2,log_odd_ratio_gradient_GC3,log_odd_ratio_intercept_GC1,log_odd_ratio_intercept_GC2,log_odd_ratio_intercept_GC3)
   draws <- mcmc(m, n_samples = n_samples, warmup = warmup,thin=thin)
-  fit_array<-array(0,dim = c(n_samples/thin*4,sites,months))
-  for(i in 1:sites){
-    cmis_log_odds_month_site<-calculate(base_par+theta_site[i]+theta_month,values=draws)
-    fit_array[,i,]<-odds_to_probability(exp(as.matrix(cmis_log_odds_month_site)))
-  }
-  matrix<-odds_to_probability(exp(as.matrix(calculate(base_par+theta_month,values=draws))))
-  prev_trends<-as.data.frame(colQuantiles(matrix,probs=c(0.5,0.025,0.975)))
-  prev_trends$month=1:months
-  names(prev_trends)<-c("med","low","high","month")
   probs <- as.data.frame(t(do.call(rbind, calculate(p, values=draws))))
+  data_w_probs<-cbind(data,probs)
+  #fit_array<-array(0,dim = c(n_samples/thin*4,sites,months))
+  #for(i in 1:sites){
+  #  cmis_log_odds_month_site<-calculate(base_par+theta_site[i]+theta_month,values=draws)
+   # fit_array[,i,]<-odds_to_probability(exp(as.matrix(cmis_log_odds_month_site)))
+  #}
+  #matrix<-odds_to_probability(exp(as.matrix(calculate(base_par+theta_month,values=draws))))
+  #prev_trends<-as.data.frame(colQuantiles(matrix,probs=c(0.5,0.025,0.975)))
+  #prev_trends$month=1:months
+  #names(prev_trends)<-c("med","low","high","month")
   lik_site <- (1 / (tau_site * sqrt(2 * pi))) * exp(-((theta_site) / tau_site) ^ 2/2)
   lik_month <- (1 / (tau_month * sqrt(2 * pi))) * exp(-((theta_month) / tau_month) ^ 2/2)
   REs_site_dev<-unlist(calculate(-2*sum(log(lik_site)),values=draws))
@@ -138,13 +139,12 @@ fit_m5<-function(data,warmup,n_samples,thin){
   
   return(
     list(
-      data=data,
       draws=draws,
-      prev_trends=prev_trends,
-      fit_array=fit_array,
-      probs=probs,
-      p_d=as.numeric(DIC_calc$p_d),
-      DIC=as.numeric(DIC_calc$DIC)
+      #   prev_trends=prev_trends,
+      #  fit_array=fit_array,
+      data_w_probs=data_w_probs,
+      p_d=DIC_calc$p_d,
+      DIC=DIC_calc$DIC
     )
   )
 }
@@ -160,29 +160,49 @@ predict_months_m1<-function(data,warmup,n_samples,thin){
   distribution(data$positive)=binomial(data$sample_size,p)
   m<-model(preg_par,theta_month,theta_site,tau_site)
   draws <- mcmc(m, n_samples = n_samples, warmup = warmup,thin=thin)
-  fit_array<-array(0,dim = c(n_samples/thin*4,sites,months))
-  for(i in 1:sites){
-    cmis_log_odds_month_site<-theta_site[i]+theta_month
-    fit_array[,i,]<-as.matrix(calculate(odds_to_probability(exp(cmis_log_odds_month_site)),values=draws))
-  }
-  matrix<-as.matrix(calculate(odds_to_probability(exp(theta_month)),values=draws))
-  prev_trends<-as.data.frame(colQuantiles(matrix,probs=c(0.5,0.025,0.975)))
-  prev_trends$month=1:months
-  names(prev_trends)<-c("med","low","high","month")
+  probs <- as.data.frame(t(do.call(rbind, calculate(p, values=draws))))
+  data_w_probs<-cbind(data,probs)
   return(
     list(
       data=data,
       draws=draws,
-      prev_trends=prev_trends,
-      fit_array=fit_array
+      data_w_probs=data_w_probs
     )
   )
 }
 
 
-compare_RE_site<-function(data,warmup,n_samples,thin){
-  
+predict_RE_site<-function(data,warmup,n_samples,thin){
+  months=max(data$month)
+  sites=max(data$site)
+  theta_month<-normal(0,100,months)
+  tau_site<-gamma(0.01,0.01)
+  theta_site<-normal(0,tau_site,sites)
+  p<-ilogit(theta_month[data$month]+theta_site[data$site])
+  distribution(data$positive)=binomial(data$sample_size,p)
+  m<-model(theta_month,theta_site,tau_site)
+  draws <- mcmc(m, n_samples = n_samples, warmup = warmup,thin=thin)
+  probs <- as.data.frame(t(do.call(rbind, calculate(p, values=draws))))
+  data_w_probs<-cbind(data,probs)
+  return(
+    list(
+      data=data,
+      draws=draws,
+      data_w_probs=data_w_probs
+    )
+  )
 }
+
+predict_nearest_month<-function(data,warmup,n_samples,thin){
+  predict_all<-predict_months_m1(data,warmup,n_samples,thin)
+  predict_all$data_w_probs <- predict_all$data_w_probs %>%
+    group_by(site) %>%
+    mutate(across(starts_with("V"), ~if_else(sample_size == 0, NA_real_, .))) %>%
+    fill(starts_with("V"), .direction = "downup") %>%
+    ungroup()
+  return(predict_all)
+  }
+ 
 
 predict_sites_m1<-function(data,warmup,n_samples,thin){
   months=max(data$month)
@@ -195,21 +215,20 @@ predict_sites_m1<-function(data,warmup,n_samples,thin){
   distribution(data$positive)=binomial(data$sample_size,p)
   m<-model(preg_par,theta_month,theta_site,tau_month)
   draws <- mcmc(m, n_samples = n_samples, warmup = warmup,thin=thin)
-  fit_array<-array(0,dim = c(n_samples/thin*4,sites,months))
-  for(i in 1:sites){
-    cmis_log_odds_month_site<-theta_site[i]+theta_month
-    fit_array[,i,]<-as.matrix(calculate(odds_to_probability(exp(cmis_log_odds_month_site)),values=draws))
-  }
-  matrix<-as.matrix(calculate(odds_to_probability(exp(theta_month)),values=draws))
-  prev_trends<-as.data.frame(colQuantiles(matrix,probs=c(0.5,0.025,0.975)))
-  prev_trends$month=1:months
-  names(prev_trends)<-c("med","low","high","month")
+  probs <- as.data.frame(t(do.call(rbind, calculate(p, values=draws))))
+  data_w_probs<-cbind(data,probs)
   return(
     list(
       data=data,
       draws=draws,
-      prev_trends=prev_trends,
-      fit_array=fit_array
+      data_w_probs=data_w_probs
     )
   )
 }
+
+
+#compare_predictions<-(model_probs,null_probs,pred_months=F,pred_sites=F){
+#  model_probs
+#  CRPS_model<-crps_binom()
+  
+#}
