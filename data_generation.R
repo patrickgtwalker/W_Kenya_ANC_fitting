@@ -1,8 +1,8 @@
-generate_data_simple<-function(n_month=50,
+generate_data_m1<-function(n_month=50,
                                    n_sites=20,
                                base_par=0,
-                               month_sd=2,
-                               site_sd =1,
+                               month_sd=0.8,
+                               site_sd =0.8,
                                    ANC_log_odds_ratio=-0.5,
                                    survey_samples_site_month_min=20,
                                    survey_samples_site_month_max=100,
@@ -14,9 +14,7 @@ generate_data_simple<-function(n_month=50,
   # generate prevalence and site-specific params
   log_odd_ratio_month <- rnorm(n_month, 0, month_sd)  # Odds ratios for each site
   log_odd_ratio_site <- rnorm(n_sites, 0, site_sd)  # Odds ratios for each site
-  
-  
-  
+
   # Initialize an empty dataframes for survey and ANC
   survey_data <- data.frame(month = integer(), site = integer(), sample_size = integer(), positive = integer())
   ANC_data<- data.frame(month = integer(), site = integer(), sample_size = integer(), positive = integer())
@@ -53,7 +51,7 @@ generate_data_simple<-function(n_month=50,
   ))
 }
 
-generate_data_simple_FE_site<-function(n_month=50,
+generate_data_m1_runif_site<-function(n_month=50,
                                        n_sites=20,
                                        month_sd =2,
                                        ANC_log_odds_ratio=-0.5,
@@ -105,7 +103,7 @@ generate_data_simple_FE_site<-function(n_month=50,
   ))
 }
 
-generate_data_simple_NNE<-function(n_month=50,
+generate_data_m1_runif_month<-function(n_month=50,
                                n_sites=20,
                                site_sd =2,
                                ANC_log_odds_ratio=-0.5,
@@ -158,7 +156,7 @@ return(list(
 }
 
 
-generate_data_complex<-function(n_month=50,
+generate_data_m5<-function(n_month=50,
                                n_sites=20,
                                base_par=0,
                                month_sd=2,
@@ -174,8 +172,7 @@ generate_data_complex<-function(n_month=50,
                                survey_samples_site_month_min=20,
                                survey_samples_site_month_max=100,
                                ANC_samples_site_month_min=10,
-                               ANC_samples_site_month_max=50,
-                               pred_months=c(4:28,32:50)
+                               ANC_samples_site_month_max=50
                                
 ){
   
@@ -216,8 +213,7 @@ generate_data_complex<-function(n_month=50,
   ANC_data$ANC=1
   survey_data$ANC=0
   
-  data_to_model<-rbind(ANC_data, survey_data)%>%
-    filter(!(month %in% pred_months&ANC==0))
+  data_to_model<-rbind(ANC_data, survey_data)
   
   return(list(
     param_df=data.frame(
@@ -231,7 +227,6 @@ generate_data_complex<-function(n_month=50,
                         log_odd_ratio_gradient_GC2=ANC_log_odds_gradient_cat2,
                         log_odd_ratio_gradient_GC3=ANC_log_odds_gradient_cat3
                         ),
-    pred_months=pred_months,
     simulated_survey_data=survey_data,
     data_to_model=data_to_model
   ))

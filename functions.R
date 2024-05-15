@@ -1,3 +1,4 @@
+# please supply a good name for this function
 '%notin%' <- function(x, table) {
   !(x %in% table)
 }
