@@ -95,10 +95,18 @@ The file is also available here:
 
 4.  View the generated HTML file in the docs folder.
 
-your-repo-name/ ├── docs/ │ ├── Linking_ANC_community_malaria.Rmd │ ├──
-Linking_ANC_community_malaria.html ├── R/ │ ├── setup.R │ ├──
-data_generation.R │ ├── models.R │ ├── summary_functions.R ├──
-.gitignore ├── README.md
+W_Kenya_ANC_fitting/
+├── docs/
+│   ├── malaria_analysis.Rmd
+│   ├── malaria_analysis.html
+├── R/
+│   ├── setup.R
+│   ├── data_generation.R
+│   ├── models.R
+│   ├── summary_functions.R
+├── .gitignore
+├── README.md
+├── LICENSE
 
 -   **`docs/`**: Contains the RMarkdown script and generated output.
 
