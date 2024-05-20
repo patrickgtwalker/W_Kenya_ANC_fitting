@@ -78,15 +78,11 @@ alone to highlight the added value of ANC data.
 
 1.  Clone the repository:
 
-    \`\`\`sh git clone
-    <https://github.com/yourusername/your-repo-name.git> cd
-    your-repo-name
-
 2.  Install the required R packages: The setup.R script includes pacman
     to automatically install and load the required packages.
 
 3.  Run the RMarkdown script:
-    rmarkdown::render("docs/your_script_name.Rmd")
+    rmarkdown::render("docs/malaria_analysis.Rmd")
 
 Note: The RMarkdown script may take a long time to run. We have included
 a pre-existing run in the repository for convenience. You can find the
