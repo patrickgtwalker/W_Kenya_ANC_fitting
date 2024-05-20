@@ -16,6 +16,7 @@ Kenya. The analysis includes generating synthetic data, fitting models
 of differing complexity, making out-of-sample predictions, and
 quantifying the incremental value of ANC data.
 
+You can view the full report [here](https://patrickgtwalker/W_Kenya_ANC_fitting/malaria_analysis.html).
 ## Table of Contents
 
 -   [Introduction](#introduction)
@@ -96,6 +97,7 @@ alone to highlight the added value of ANC data.
 Note: The RMarkdown script may take a long time to run. We have included
 a pre-existing run in the repository for convenience. You can find the
 generated HTML file in the docs folder.
+The file is also available here: 
 
 4.  View the generated HTML file in the docs folder.
 
