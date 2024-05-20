@@ -25,7 +25,7 @@ You can view the full report [here](https://patrickgtwalker.github.io/W_Kenya_AN
 -   [Contributing](#contributing)
 -   [License](#license)
 
-## Introduction {#introduction}
+## Introduction 
 
 This analysis summarizes the key features of our approach to assessing
 the relationship between malaria prevalence within ANC relative to the
@@ -36,38 +36,38 @@ on ANC prevalence alone and quantify the incremental value of the data
 compared to information typically available via population-based
 surveys.
 
-## Generating Synthetic Data {#generating-synthetic-data}
+## Generating Synthetic Data 
 
 We generate synthetic data representing the simplest and most complex
-models to illustrate our approach.
+models to provide toy examples which then allow us to illustrate our approach.
 
-## Fitting Models {#fitting-models}
+## Fitting Models 
 
 We fit the generated data to models of varying complexity to compare
 their performance.
 
-## Model Evaluation {#model-evaluation}
+## Model Evaluation 
 
 We evaluate the fitted models by comparing the parameters to the
 simulated values and assess their predictive accuracy.
 
-## Out-of-Sample Predictions {#out-of-sample-predictions}
+## Out-of-Sample Predictions
 
 We make out-of-sample predictions to evaluate how well the models
 reconstruct ANC prevalence between surveys spaced over a few months
 every few years.
 
-## Quantitative Assessment {#quantitative-assessment}
+## Quantitative Assessment
 
 We use two metrics to assess the predictive accuracy: Residual Mean
 Square Error (RMSE) and Continuous Ranked Probability Score (CRPS).
 
-## Incremental Value of ANC Data {#incremental-value-of-anc-data}
+## Incremental Value of ANC Data
 
 We compare the predictive power of ANC data with that of survey data
 alone to highlight the added value of ANC data.
 
-## Usage {#usage}
+## Usage
 
 ### Prerequisites
 
@@ -95,7 +95,7 @@ The file is also available here:
 
 4.  View the generated HTML file in the docs folder.
 
-## Repository Structure {#repository_structure}
+## Repository Structure
 W_Kenya_ANC_fitting/
 ├── docs/
 │   ├── malaria_analysis.Rmd
