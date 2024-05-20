@@ -95,6 +95,7 @@ The file is also available here:
 
 4.  View the generated HTML file in the docs folder.
 
+## Repository Structure {#repository_structure}
 W_Kenya_ANC_fitting/
 ├── docs/
 │   ├── malaria_analysis.Rmd
