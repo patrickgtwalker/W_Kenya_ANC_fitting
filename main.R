@@ -1,3 +1,6 @@
+## This is a [insert name of what this is] which summarises the key features of our approach outlined in /final_name_analysis to assessing the relationship between prevalence of malaria within antenatal care relative to that in the community in Rarieda sub-county in Western Kenya
+## we will first show how we fit and compare models of differing complexity then how we generate out-of-sample predictions for settings based on ANC prevalence alone and quantfy the incremental value of the data compared to infromation typically available via population based surveys of malaria prevalnce in the community
+
 source("setup.R")
 source("functions.R")
 source("data_generation.R")
@@ -15,8 +18,8 @@ get_data_plots(m1_data$data_to_model)
 m5_data<-generate_data_m5()
 get_data_plots(m5_data$data_to_model)
 ### fit models
-m1_fitting<-fit_m1(m1_data$data_to_model,100,200,1)
-m5_fitting<-fit_m5(m5_data$data_to_model,1000,2000,1)
+m1_fitting<-fit_m1(m1_data$data_to_model,1000,1000,10)
+m5_fitting<-fit_m5(m5_data$data_to_model,1000,2000,10)
 
 ### check model recaptures parameters 
 m1_plots<-get_fit_plots(m1_fitting,m1_data$simulated_survey_data,m1_data$param_df)
@@ -43,32 +46,85 @@ m5_fitting$DIC-m1_fit_to_m5_data$DIC
 months_to_predict<-generate_data_m1_runif_month()
 
 ### predict_months_m1() now uses model 1 above but using a fixed effect (rather than normally-distributed random) for month to give maximum flexibility to the prediction by month
-predict_months<-predict_months_m1(months_to_predict$data_to_model,500,500,1)
+predict_months<-predict_months_m1(months_to_predict$data_to_model,500,1000,5)
 
-### predicts well visually (as expected given the data and predictions are generated using the same model)
+### predicts well visually (as we'd expect given the data and predictions are generated using the same model)
 predict_months_plot<-get_fit_plots(predict_months,months_to_predict$simulated_survey_data,months_to_predict$param_df,pred_months=months_to_predict$pred_months)
-predict_months_plot
+predict_months_plot$overall_plot
 
-## in our analysis we provide two summaries of prediction accuracy
-model_prediction_summary<-get_metrics(months_to_predict,predictions_model)
-
-model_prediction_summary
-null_prediction_summary<-get_metrics(data_to_predict,predictions_model)
-
-
-
-
+## similarly with non-normal site-specific ORs....
 sites_to_predict<-generate_data_m1_runif_site()
 predict_sites<-predict_sites_m1(sites_to_predict$data_to_model,100,200,1)
+
+### again predicts well visually in this dummy situation where we're fitting the same model used to generate the data
 predict_sites_plot<-get_fit_plots(predict_sites,sites_to_predict$simulated_survey_data,sites_to_predict$param_df,pred_sites=sites_to_predict$pred_sites)
-predict_sites_plot
+predict_sites_plot$overall_plot
+
+##...but how do we assess quantitatively? In our analysis we present two metrics - Residual Mean Square Error (RMSE) in the absolute difference between % prevalence in our predictions vs the observed prevalence and the Continuous Ranked Probability score
+### RMSE is much easier to understand and more representative of a distant metric likely to be a measure of how many more/fewer people you are likely to find infected in a sample, but penalising more for predictions that are further away
+predict_months_plot$prediction_metrics%>%
+  filter(month!="all",site!="all")%>%
+  summarise(mean_pc_RMSE=mean(RMSE*100))
+predict_months_plot$prediction_metrics%>%
+  filter(site=="all")%>%
+  summarise(mean_pc_RMSE_over_sites=mean(RMSE*100))
 
 
+### but RMSE has many disadvantages and typically isn't recommended for assessment validity of a probablity metric (e.g. if for a situation with 50% predictions of 47%-53% may reasonable, for a setting with 1% prevalence predictions of -2% and 4% are likely to be substantially less useful, yet all four of these predictions have same RMSE)
+### CRPS - a [give relevant layperson definition of CRPS] is much more technically valid but is far less intuitive here we can view it as [tell me what I can view it as]
+CPRS_month_site<-predict_months_plot$prediction_metrics%>%
+  filter(month!="all",site!="all")%>%
+  summarise(mean_pc_CRPS=mean(CRPS*100))
+CPRS_month_site
+CPRS_month<-predict_months_plot$prediction_metrics%>%
+  filter(site=="all")%>%
+  summarise(mean_pc_CRPS_over_sites=mean(CRPS*100))
+CPRS_month
 
-
-predict_month_no_ANC<-predict_nearest_month(months_to_predict_no_ANC$data_to_model,100,200,1)
+## However, a clear question arises 'what is the ANC data actually adding to what we currently have??'
+## for this we need to define a 'null model' for what we would normally predict in the absence of the data
+## the choice of this is somewhat subjective but in our analysis we compare predictions made using ANC data alone with those where we extrapolate from most recent survey data supplied for model fitting (here we use an example akin to a likely gap between survey of three years, in our analysis we provide ANC data a higher benchmark of being superior in predicting over the next five months following a continuous survey) 
+months_to_predict_no_ANC<-months_to_predict
+months_to_predict_no_ANC$data_to_model<-months_to_predict$data_to_model%>%filter(ANC==0)
+predict_month_no_ANC<-predict_nearest_month(months_to_predict_no_ANC$data_to_model,500,1000,5)
 predict_month_no_ANC_plot<-get_fit_plots(predict_month_no_ANC,months_to_predict_no_ANC$simulated_survey_data,months_to_predict_no_ANC$param_df,pred_months=months_to_predict_no_ANC$pred_months)
-predict_month_no_ANC_plot
+
+## in this dummy example this approach will work particularly badly as monthly ORs are completely random whereas in reality community prevalence is likley to be subject to a high degree of autocorrelation
+predict_month_no_ANC_plot$overall_plot
+
+### we can now calculate the CPRS of this 'null' model where we rely purely on the survey data involved in training the model
+
+CPRS_month_null<-predict_month_no_ANC_plot$prediction_metrics%>%
+  filter(site=="all")%>%
+  summarise(mean_pc_CRPS_over_sites=mean(CRPS*100))
+
+## A useful summary is the relative CRPS 'Skill' (CRPSS) of the model which [give intuitive definition] here a value of 93% represents [give intuitve definition]
+(1-CPRS_month$mean_pc_CRPS_over_sites/CPRS_month_null$mean_pc_CRPS_over_sites)*100
+
+
+### for locations-specific data we use a null model whereby the prevalence in a given location without ANC is modeled by extrapolating from a simple random-effects model for the other locations in the region
+sites_to_predict_no_ANC<-sites_to_predict
+sites_to_predict_no_ANC$data_to_model<-sites_to_predict$data_to_model%>%filter(ANC==0)
+predict_sites_no_ANC<-predict_RE_site(sites_to_predict_no_ANC$data_to_model,500,1000,5)
+predict_sites_no_ANC_plot<-get_fit_plots(predict_sites_no_ANC,sites_to_predict_no_ANC$simulated_survey_data,sites_to_predict_no_ANC$param_df,pred_sites=sites_to_predict_no_ANC$pred_months)
+
+### As site-specific prevalence is U(0,1) distributed this will perform poorly in our dummy example
+predict_sites_no_ANC_plot<-get_fit_plots(predict_sites_no_ANC,sites_to_predict_no_ANC$simulated_survey_data,sites_to_predict_no_ANC$param_df,pred_sites=sites_to_predict_no_ANC$pred_sites)
+
+##### However, in our analysis this would provide much more context-specific information compared to relying upon a typical MIS - our null model involves extrapolate from data from x thousand samples from a population of y sampled from all villages outside of the sub-location. In contrast the most recent Kenya MIS has data from x children to represent a population of y million in the Lake region of the country.
+
+## we can quantify the incremental value using CPRSS as with the monthly-predictions
+CPRS_site_null<-predict_sites_no_ANC_plot$prediction_metrics%>%
+  filter(site=="all")%>%
+  summarise(mean_pc_CRPS_over_months=mean(CRPS*100))
+
+CPRS_site<-predict_sites_plot$prediction_metrics%>%
+  filter(site=="all")%>%
+  summarise(mean_pc_CRPS_over_months=mean(CRPS*100))
+
+## and quantify relative fit as with monthly predictions
+(1-CPRS_site$mean_pc_CRPS_over_months/CPRS_site_null$mean_pc_CRPS_over_months)*100
+
 
 
 print(predict_month_no_ANC$data_w_probs[1:10,1:10],row.names=F)
@@ -82,6 +138,8 @@ predictions_null<-predict_month_no_ANC$data_w_probs%>%filter(ANC==0,month%in%mon
 
 predictions_model<-predict_months$data_w_probs%>%filter(ANC==0,month%in%months_to_predict_no_ANC$pred_months|site%in%months_to_predict_no_ANC$pred_sites)%>%
   select(month,site,starts_with("V"))
+
+
 
 merged_null<-merge(data_to_predict,predictions_null,by=c("month","site"))
 merged_model<-merge(data_to_predict,predictions_model,by=c("month","site"))

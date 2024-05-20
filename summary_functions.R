@@ -1,3 +1,17 @@
+
+
+# Functions to convert between odds and probability
+odds_to_probability <- function(odds) {
+  # Calculate probability from given odds
+  odds / (1 + odds)
+}
+
+probability_to_odds <- function(probability) {
+  # Calculate odds from given probability
+  probability / (1 - probability)
+}
+
+
 get_data_plots <- function(data) {
   cols<-viridis(2)
   # Extract prevalence by site
