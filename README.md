@@ -1,9 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
-
 # W_Kenya_ANC_fitting
 
 Using ANC data to reconstruct community prevalence trends \# Assessing
@@ -16,7 +10,7 @@ Kenya. The analysis includes generating synthetic data, fitting models
 of differing complexity, making out-of-sample predictions, and
 quantifying the incremental value of ANC data.
 
-You can view the full report [here](https://patrickgtwalker/W_Kenya_ANC_fitting/malaria_analysis.html).
+You can view the full report [here](https://patrickgtwalker.github.io/W_Kenya_ANC_fitting/malaria_analysis.html).
 ## Table of Contents
 
 -   [Introduction](#introduction)
