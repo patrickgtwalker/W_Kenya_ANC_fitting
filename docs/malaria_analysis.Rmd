@@ -9,7 +9,7 @@ source("../R/setup.R")
 source("../R/data_generation.R")
 source("../R/models.R")
 source("../R/summary_functions.R")
-set.seed(100)
+set.seed(101)
 ```
 
 ## **Introduction**
