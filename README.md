@@ -1,7 +1,6 @@
 # W_Kenya_ANC_fitting
 
-Using ANC data to reconstruct community prevalence trends \# Assessing
-Malaria Prevalence: Community vs Antenatal Care in Rarieda Sub-county,
+Using ANC data to reconstruct community prevalence trends in Rarieda Sub-county,
 Western Kenya
 
 This project analyzes the relationship between malaria prevalence within
