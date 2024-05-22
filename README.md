@@ -81,7 +81,9 @@ alone to highlight the added value of ANC data.
 2.  Install the required R packages: The setup.R script includes pacman
     to automatically install and load the required packages.
 
-3.  Run the RMarkdown script:
+3.  If you have never used the 'greta' R package before you will need to run the function greta::install_greta_deps() before running the RMarkdown script to install the required dependencies.
+
+4.  Run the RMarkdown script:
     rmarkdown::render("docs/malaria_analysis.Rmd")
 
 Note: The RMarkdown script may take a long time to run. We have included
